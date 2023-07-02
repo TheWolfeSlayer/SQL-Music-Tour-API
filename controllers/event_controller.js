@@ -1,7 +1,7 @@
 // DEPENDENCIES
 const event = require('express').Router()
 const db = require('../models')
-const { Event } = db 
+const { Event, MeetGreet, Band, Stage, SetTime } = db 
 
 // DEPENDENCIES 
 const { Op } = require('sequelize')
@@ -23,10 +23,32 @@ event.get('/', async (req, res) => {
 
 
 // FIND A SPECIFIC EVENT
-event.get('/:id', async (req, res) => {
+event.get('/:name', async (req, res) => {
     try {
         const foundEvent = await Event.findOne({
-            where: { event_id: req.params.id }
+            where: { name: req.params.name },
+            include: [
+                {
+                    model: MeetGreet,
+                    as: 'meet_greets',
+                    attributes: ['meet_start_time', 'meet_end_time'],
+                    include: {
+                        model: Band,
+                        as: 'band',
+                        attributes: ['name']
+                    }
+                },
+                {
+                    model: Stage,
+                    as: 'stages',
+                    attributes: { exclude: ['stage_id'] }
+                },
+                {
+                    model: SetTime,
+                    as: 'set_time',
+                    attributes: ['start_time', 'end_time']
+                }
+            ]
         })
         res.status(200).json(foundEvent)
     } catch (error) {
